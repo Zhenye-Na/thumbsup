@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
@@ -9,42 +11,24 @@ User = get_user_model()
 
 
 class UserDetailView(LoginRequiredMixin, DetailView):
-
+    """用户详情"""
     model = User
     slug_field = "username"
     slug_url_kwarg = "username"
-
-
-user_detail_view = UserDetailView.as_view()
+    template_name = "users/user_detail.html"
 
 
 class UserUpdateView(LoginRequiredMixin, UpdateView):
-
+    """用户只能更改自己的信息"""
     model = User
-    fields = ["name"]
+    fields = ['nickname', 'email', 'picture', 'introduction', 'job_title', 'location', 'personal_url', 'weibo', 'zhihu',
+              'github', 'linkedin']
+    template_name = 'users/user_form.html'
 
     def get_success_url(self):
+        """更新成功后跳转的页面"""
         return reverse("users:detail", kwargs={"username": self.request.user.username})
 
-    def get_object(self):
-        return User.objects.get(username=self.request.user.username)
-
-    def form_valid(self, form):
-        messages.add_message(
-            self.request, messages.INFO, _("Infos successfully updated")
-        )
-        return super().form_valid(form)
-
-
-user_update_view = UserUpdateView.as_view()
-
-
-class UserRedirectView(LoginRequiredMixin, RedirectView):
-
-    permanent = False
-
-    def get_redirect_url(self):
-        return reverse("users:detail", kwargs={"username": self.request.user.username})
-
-
-user_redirect_view = UserRedirectView.as_view()
+    def get_object(self, queryset=None):
+        return self.request.user
+        # return User.objects.get(username=self.request.user.username)
