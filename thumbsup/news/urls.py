@@ -10,5 +10,6 @@ urlpatterns = [
     path("delete/<str:pk>",  views.NewsDeleteView.as_view(), name="delete_news"),
     path("like/", views.like, name="like_post"),
     path("get-thread/", views.get_thread, name="get_thread"),
-    path("post-comment/", views.post_comment, name="post_comment")
+    path("post-comment/", views.post_comment, name="post_comment"),
+    path('update-interactions/', views.update_interactions, name='update_interactions'),
 ]

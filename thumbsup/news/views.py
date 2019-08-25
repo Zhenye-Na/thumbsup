@@ -19,14 +19,12 @@ class NewsListView(LoginRequiredMixin, ListView):
     template_name = 'news/news_list.html'
 
     def get_queryset(self):
-        return News.objects.filter(reply=False)
+        return News.objects.filter(reply=False).select_related('user', 'parent').prefetch_related('liked')
 
 
 class NewsDeleteView(LoginRequiredMixin, AuthorRequiredMixin, DeleteView):
     model = News
     template_name = 'news/news_confirm_delete.html'
-    # slug_url_kwarg = 'slug'  # 通过 url 传入要删除的对象主键 id, 默认值为 slug
-    # pk_url_kwarg = 'pk'  # 通过 url 传入要删除的对象主键 id, 默认值为 pk
     success_url = reverse_lazy('news:list')  # 在项目 URLConf 未加载前使用
 
 
@@ -41,7 +39,7 @@ def post_news(request):
         html = render_to_string('news/news_single.html', {'news': posted, 'request': request})
         return HttpResponse(html)
     else:
-        return HttpResponseBadRequest('内容不能为空')
+        return HttpResponseBadRequest('内容不能为空!')
 
 
 @login_required
@@ -51,7 +49,9 @@ def like(request):
     """点赞, Ajax POST 请求"""
     news_id = request.POST['news']
     news = News.objects.get(pk=news_id)
+    # 取消或者添加赞
     news.switch_like(request.user)
+    # 返回赞的数量
     return JsonResponse({'likes': news.like_count()})
 
 
@@ -61,7 +61,8 @@ def like(request):
 def get_thread(request):
     """返回动态的评论, AJAX GET 请求"""
     news_id = request.GET['news']
-    news = News.objects.get(pk=news_id)
+    news = News.objects.select_related('user').get(pk=news_id)  # 不是 .get(pk=news_id).select_related('user')
+    # render_to_string()表示加载模板，填充数据，返回字符串
     news_html = render_to_string('news/news_single.html', {'news': news})  # 没有评论
     thread_html = render_to_string('news/news_thread.html', {'thread': news.get_thread()})
     return JsonResponse({
@@ -86,3 +87,13 @@ def post_comment(request):
         })
     else:
         return HttpResponseBadRequest('内容不能为空!')
+
+
+@login_required
+@ajax_required
+@require_http_methods(["POST"])
+def update_interactions(request):
+    """更新互动信息"""
+    data_point = request.POST['id_value']
+    news = News.objects.get(pk=data_point)
+    return JsonResponse({'likes': news.like_count(), 'comments': news.comment_count()})
