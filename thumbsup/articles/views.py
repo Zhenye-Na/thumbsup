@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
 
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import CreateView, ListView, UpdateView, DetailView
 
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+
+from django_comments.signals import comment_was_posted
+
 from thumbsup.articles.models import Article
 from thumbsup.articles.forms import ArticleForm
 from thumbsup.helpers import AuthorRequiredMixin
+from thumbsup.notifications.views import notification_handler
+
 
 class ArticleListView(LoginRequiredMixin, ListView):
     """已发布的文章列表"""
@@ -17,21 +24,23 @@ class ArticleListView(LoginRequiredMixin, ListView):
     context_object_name = 'articles'
     template_name = 'articles/article_list.html'
 
-    def get_context_data(self, *, object_list=None, **kwargs):
-        context = super().get_context_data()
+    def get_context_data(self, *args, **kwargs):
+        context = super(ArticleListView, self).get_context_data(*args, **kwargs)
         context['popular_tags'] = Article.objects.get_counted_tags()
         return context
 
-    def get_queryset(self):
+    def get_queryset(self, **kwargs):
         return Article.objects.get_published()
 
 
 class DraftListView(ArticleListView):
     """草稿箱文章列表"""
-    def get_queryset(self):
+    def get_queryset(self, **kwargs):
+        # 当前用户的草稿
         return Article.objects.filter(user=self.request.user).get_drafts()
 
 
+@method_decorator(cache_page(60 * 60), name='get')
 class ArticleCreateView(LoginRequiredMixin, CreateView):
     """发表文章"""
     model = Article
@@ -41,7 +50,7 @@ class ArticleCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.user = self.request.user
-        return super().form_valid(form)
+        return super(ArticleCreateView, self).form_valid(form)
 
     def get_success_url(self):
         """创建成功后跳转"""
@@ -54,8 +63,8 @@ class ArticleDetailView(LoginRequiredMixin, DetailView):
     model = Article
     template_name = 'articles/article_detail.html'
 
-    # def get_queryset(self):
-    #     return Article.objects.select_related('user').filter(slug=self.kwargs['slug'])
+    def get_queryset(self):
+        return Article.objects.select_related('user').filter(slug=self.kwargs['slug'])
 
 
 class ArticleEditView(LoginRequiredMixin, AuthorRequiredMixin, UpdateView):  # 注意类的继承顺序
@@ -71,4 +80,15 @@ class ArticleEditView(LoginRequiredMixin, AuthorRequiredMixin, UpdateView):  # �
 
     def get_success_url(self):
         messages.success(self.request, self.message)
-        return reverse_lazy('articles:article', kwargs={'slug': self.get_object().slug})
+        return reverse('articles:list')
+
+
+def notify_comment(**kwargs):
+    """文章有评论时通知作者"""
+    actor = kwargs['request'].user
+    obj = kwargs['comment'].content_object
+
+    notification_handler(actor, obj.user, 'C', obj)
+
+
+comment_was_posted.connect(receiver=notify_comment)
