@@ -64,7 +64,6 @@ DJANGO_APPS = [
     "django.contrib.sites",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "django.contrib.humanize",  # Handy template tags
     "django.forms",
 ]
 THIRD_PARTY_APPS = [
@@ -74,13 +73,12 @@ THIRD_PARTY_APPS = [
     "allauth.account",
     "allauth.socialaccount",
     'allauth.socialaccount.providers.github',
-    # "rest_framework",
-    # "django_celery_beat",
     "sorl.thumbnail",
     "taggit",
     "markdownx",
     "django_comments",
-    "djcelery_email",
+    "haystack",
+    "djcelery_email"
 ]
 
 LOCAL_APPS = [
@@ -90,6 +88,8 @@ LOCAL_APPS = [
     "thumbsup.articles.apps.ArticlesConfig",
     "thumbsup.qa.apps.QaConfig",
     "thumbsup.messager.apps.MessagerConfig",
+    "thumbsup.notifications.apps.NotificationsConfig",
+    "thumbsup.search.apps.SearchConfig"
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -240,32 +240,9 @@ EMAIL_HOST_USER = env('DJANGO_EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = env('DJANGO_EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = env('DJANGO_DEFAULT_FROM_EMAIL')
 
-# LOGGING
-# ------------------------------------------------------------------------------
-# https://docs.djangoproject.com/en/dev/ref/settings/#logging
-# See https://docs.djangoproject.com/en/dev/topics/logging for
-# more details on how to customize your logging configuration.
-# LOGGING = {
-#     "version": 1,
-#     "disable_existing_loggers": False,
-#     "formatters": {
-#         "verbose": {
-#             "format": "%(levelname)s %(asctime)s %(module)s "
-#                       "%(process)d %(thread)d %(message)s"
-#         }
-#     },
-#     "handlers": {
-#         "console": {
-#             "level": "DEBUG",
-#             "class": "logging.StreamHandler",
-#             "formatter": "verbose",
-#         }
-#     },
-#     "root": {"level": "INFO", "handlers": ["console"]},
-# }
-
 # Celery
 # ------------------------------------------------------------------------------
+INSTALLED_APPS += ['thumbsup.taskapp.celery.CeleryAppConfig']
 if USE_TZ:
     # http://docs.celeryproject.org/en/latest/userguide/configuration.html#std:setting-timezone
     CELERY_TIMEZONE = TIME_ZONE
@@ -296,7 +273,7 @@ ACCOUNT_AUTHENTICATION_METHOD = "username"
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 ACCOUNT_EMAIL_REQUIRED = True
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
-ACCOUNT_EMAIL_VERIFICATION = "none"  # mandatory, optional
+ACCOUNT_EMAIL_VERIFICATION = "optional"  # mandatory, optional
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 ACCOUNT_ADAPTER = "thumbsup.users.adapters.AccountAdapter"
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
@@ -327,3 +304,19 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        # 使用的 ElasticSearch 搜索引擎
+        'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',
+        # ElasticSearch 连接的地址
+        'URL': 'http://127.0.0.1:9200/',
+        # 默认的索引名
+        'INDEX_NAME': 'thumbsup',
+    }
+}
+
+# 分页
+HAYSTACK_SEARCH_RESULTS_PER_PAGE = 20
+# 实时信号量处理器 - 模型类中数据增加, 更新, 删除时自动更新索引
+HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'

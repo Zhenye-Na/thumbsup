@@ -14,14 +14,16 @@ urlpatterns = [
     path("accounts/", include("allauth.urls")),
 
     # Your stuff: custom urls includes go here
-    path("news/", include("news.urls", namespace="news")),
-    path("articles/", include("articles.urls", namespace="articles")),
-    path("qa/", include("qa.urls", namespace="qa")),
-    path('messages/', include('messager.urls', namespace='messages')),
+    path("news/", include("thumbsup.news.urls", namespace="news")),
+    path("articles/", include("thumbsup.articles.urls", namespace="articles")),
+    path("qa/", include("thumbsup.qa.urls", namespace="qa")),
+    path('messages/', include('thumbsup.messager.urls', namespace='messages')),
+    path('notifications/', include('thumbsup.notifications.urls', namespace='notifications')),
 
     # Third party applications
     path("markdownx/", include('markdownx.urls')),
     path("comments/", include('django_comments.urls')),
+    path("search/", include('haystack.urls'))
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
