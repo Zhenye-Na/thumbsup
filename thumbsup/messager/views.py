@@ -10,7 +10,7 @@ from django.views.decorators.http import require_http_methods
 from django.views.generic import ListView
 from django.template.loader import render_to_string
 
-# from channels.layers import get_channel_layer
+from channels.layers import get_channel_layer
 
 from thumbsup.messager.models import Message
 from thumbsup.helpers import ajax_required
@@ -69,25 +69,15 @@ def send_message(request):
             message=message
         )
 
-        # channel_layer = get_channel_layer()
+        channel_layer = get_channel_layer()
         payload = {
             'type': 'receive',
             'message': render_to_string('messager/single_message.html', {"message": msg}),
             'sender': sender.username
         }
         # group_send(group: 所在组-接收者的username, message: 消息内容)
-        # async_to_sync(channel_layer.group_send)(recipient.username, payload)
+        async_to_sync(channel_layer.group_send)(recipient.username, payload)
 
         return render(request, 'messager/single_message.html', {'message': msg})
 
     return HttpResponse()
-
-
-@login_required
-@ajax_required
-@require_http_methods(["GET"])
-def receive_message(request):
-    """发送消息, AJAX GET 请求"""
-    message_id = request.GET['message_id']
-    msg = Message.objects.get(pk=message_id)
-    return render(request, 'messager/single_message.html', {'message': msg})
