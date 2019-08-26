@@ -339,6 +339,6 @@ thumbsup/media/
 .pytest_cache/
 
 
-.env
+# .env
 .envs/*
 !.envs/.local/
