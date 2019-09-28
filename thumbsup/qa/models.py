@@ -35,8 +35,8 @@ class Vote(models.Model):
         verbose_name = '投票'
         verbose_name_plural = verbose_name
         unique_together = ('user', 'content_type', 'object_id')  # 联合唯一键
-        # SQL 优化
-        index_together = ('content_type', 'object_id')  # 联合唯一索引
+        # SQL 优化 - 联合唯一索引
+        index_together = ('content_type', 'object_id')
 
 
 @python_2_unicode_compatible
@@ -54,13 +54,11 @@ class QuestionQuerySet(models.query.QuerySet):
     def get_counted_tags(self):
         """统计所有问题标签的数量(大于0的)"""
         tag_dict = {}
-        for obj in self.all():
+        query_set = self.all().annotate(tagged=models.Count('tags')).filter(tags__gt=0)
+    
+        for obj in query_set:
             for tag in obj.tags.names():
-                if tag not in tag_dict:
-                    tag_dict[tag] = 1
-
-                else:
-                    tag_dict[tag] += 1
+                tag_dict[tag] = tag_dict.get(tag, 0) + 1
         return tag_dict.items()
 
 
@@ -106,19 +104,23 @@ class Question(models.Model):
 
     def get_answers(self):
         """获取所有的回答"""
-        return Answer.objects.filter(question=self).select_related('user', 'question')  # self 作为参数, 当前的问题有多少个回答
+        # self 作为参数, 当前的问题有多少个回答
+        return Answer.objects.filter(question=self).select_related('user', 'question')
 
     def count_answers(self):
         """回答的数量"""
         return self.get_answers().count()
 
     def get_upvoters(self):
-        """赞同的用户"""
-        return [vote.user for vote in self.filter(value=True).select_related('user').prefetch_related('vote')]
+        """获取赞同的用户"""
+        return [vote.user for vote in self.votes.filter(value=True).select_related('user').prefetch_related('vote')]
 
     def get_downvoters(self):
-        """反对的用户"""
+        """获取反对的用户"""
         return [vote.user for vote in self.votes.filter(value=False).select_related('user').prefetch_related('vote')]
+
+    def get_accepted_answer(self):
+        return Answer.objects.get(question=self, is_answer=True)
 
 
 @python_2_unicode_compatible
@@ -145,8 +147,8 @@ class Answer(models.Model):
         return markdownify(self.content)
 
     def total_votes(self):
-        """得票数"""
-        dic = Counter(self.votes.values_list('value', flat=True))  # Counter 赞同票多少, 反对票少数
+        """获得得票数"""
+        dic = Counter(self.votes.values_list('value', flat=True))  # Counter 获得赞同/反对票数
         return dic[True] - dic[False]
 
     def get_upvoters(self):
@@ -158,8 +160,15 @@ class Answer(models.Model):
         return [vote.user for vote in self.votes.filter(value=False).select_related('user').prefetch_related('vote')]
 
     def accept_answer(self):
-        """接受回答"""
-        # 当一个问题有多个回答的时候, 只能采纳一个回答, 其它回答一律置为未接受
+        """
+        接受回答
+        
+        当一个问题有多个回答的时候, 只能采纳一个回答, 其它回答一律置为未接受
+
+        1.需要返回查询集的逻辑写在 QuerySet Model 中
+        2.模型类中数据库处理的逻辑写在 Models 中
+        3.业务相关逻辑的处理写在 Views 中
+        """
         answer_set = Answer.objects.filter(question=self.question)  # 查询当前问题的所有回答
         answer_set.update(is_answer=False)  # 一律置为未接受
         # 接受当前回答并保存
@@ -168,7 +177,3 @@ class Answer(models.Model):
         # 该问题已有被接受的回答, 保存
         self.question.has_answer = True
         self.question.save()
-
-# 1.需要返回查询集的逻辑写在 QuerySetModel 中
-# 2.模型类中数据库处理的逻辑写在 Models 中
-# 3.业务相关逻辑的处理写在 Views 中

@@ -27,17 +27,18 @@ class ArticleQuerySet(models.query.QuerySet):
     def get_counted_tags(self):
         """统计所有已发表的文章中标签个数大于 0 的文章"""
         tag_dict = {}
-        for obj in self.all():
+        query_set = self.get_published().annotate(tagged=models.Count('tags')).filter(tags__gt=0)
+
+        for obj in query_set:
             for tag in obj.tags.names():
-                if tag not in tag_dict:
-                    tag_dict[tag] = 1
-                else:
-                    tag_dict[tag] += 1
+                tag_dict[tag] = tag_dict.get(tag, 0) + 1
+
         return tag_dict.items()
 
 
 @python_2_unicode_compatible
 class Article(models.Model):
+    """文章模型类"""
     STATUS = (('D', 'Draft'), ('P', 'Published'))
 
     title = models.CharField(max_length=255, null=False, unique=True, verbose_name='标题')
@@ -63,7 +64,7 @@ class Article(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            # 根据作者和标题生成文章在URL中的别名
+            # 根据作者和标题生成文章在 URL 中的别名
             self.slug = slugify(self.title)
         super(Article, self).save(*args, **kwargs)
 

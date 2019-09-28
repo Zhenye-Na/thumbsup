@@ -9,7 +9,7 @@ def ajax_required(f):
 
     @wraps(f)
     def wrap(request, *args, **kwargs):
-        # request.is_ajax() -> 判断 request 是否是 AJAX 请求
+        """判断 request 是否是 AJAX 请求"""
         if not request.is_ajax():
             return HttpResponseBadRequest('不是 AJAX 请求!')
         return f(request, *args, **kwargs)

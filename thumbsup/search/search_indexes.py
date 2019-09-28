@@ -24,7 +24,7 @@ class ArticleIndex(indexes.SearchIndex, indexes.Indexable):
 
 
 class NewsIndex(indexes.SearchIndex, indexes.Indexable):
-    """对News模型类中部分字段建立索引"""
+    """对 News 模型类中部分字段建立索引"""
     text = indexes.CharField(document=True, use_template=True,
                              template_name='search/news_text.txt')
 

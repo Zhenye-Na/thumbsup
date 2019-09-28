@@ -23,9 +23,12 @@ class NewsListView(LoginRequiredMixin, ListView):
 
 
 class NewsDeleteView(LoginRequiredMixin, AuthorRequiredMixin, DeleteView):
+    """删除动态"""
     model = News
     template_name = 'news/news_confirm_delete.html'
-    success_url = reverse_lazy('news:list')  # 在项目 URLConf 未加载前使用
+    # slug_url_kwarg = 'slug' 通过 url 传入想要删除的对象主键 id, 默认值是 slug
+    # pk_url_kwarg = 'pk' 通过 url 传入想要删除的对象主键 id, 默认值是 pk
+    success_url = reverse_lazy('news:list')  # 使用 reverse_lazy() 而不是 reverse() 的好处是可以在项目 URLConf 未加载前使用
 
 
 @login_required
@@ -62,9 +65,11 @@ def get_thread(request):
     """返回动态的评论, AJAX GET 请求"""
     news_id = request.GET['news']
     news = News.objects.select_related('user').get(pk=news_id)  # 不是 .get(pk=news_id).select_related('user')
-    # render_to_string()表示加载模板，填充数据，返回字符串
-    news_html = render_to_string('news/news_single.html', {'news': news})  # 没有评论
-    thread_html = render_to_string('news/news_thread.html', {'thread': news.get_thread()})
+
+    # render_to_string()表示加载模板, 填充数据, 返回字符串
+    news_html = render_to_string('news/news_single.html', {'news': news})  # 没有评论, 返回单条动态
+    thread_html = render_to_string('news/news_thread.html', {'thread': news.get_thread()}) # 有评论时, 返回动态所有评论
+
     return JsonResponse({
         'uuid': news_id,
         'news': news_html,
@@ -76,7 +81,7 @@ def get_thread(request):
 @ajax_required
 @require_http_methods(['POST'])
 def post_comment(request):
-    """点赞, Ajax POST 请求"""
+    """给动态评论, Ajax POST 请求"""
     post = request.POST['reply'].strip()
     parent_id = request.POST['parent']
     parent = News.objects.get(pk=parent_id)

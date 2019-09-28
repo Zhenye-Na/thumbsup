@@ -10,10 +10,10 @@ from thumbsup.qa import views
 
 """
 使用 TestClient 和 RequestFactory 测试视图的区别
-TestClient: 走 Django 框架的整个请求响应流程，经过 WSGI handler、中间件、URL路由、上下文处理器，返回 response，更像是集成测试。
-    特点: 使用简单，测试一步到位。测试用例运行慢，依赖于中间件、URL路由等其它部分
+TestClient: 走 Django 框架的整个请求响应流程, 经过 WSGI handler, 中间件, URL路由, 上下文处理器, 返回 response, 更像是集成测试.
+    特点: 使用简单, 测试一步到位. 测试用例运行慢, 依赖于中间件, URL路由等其它部分
 
-RequestFactory: 生成WSGIRequest供使用，与Django代码无关，单元测试的最佳实践，但使用难度高
+RequestFactory: 生成 WSGIRequest 供使用, 与 Django 代码无关, 单元测试的最佳实践, 但使用难度高
 """
 
 
@@ -103,7 +103,7 @@ class TestCreateQuestionView(BaseQATest):
         data = {'title': 'title', 'content': 'content', 'tags': 'tag1,tag2', 'status': 'O'}
         request = RequestFactory().post('/fake-url', data=data)
         request.user = self.user
-        # RequestFactory测试含有django.contrib.messages的视图 https://code.djangoproject.com/ticket/17971
+        # RequestFactory 测试含有 django.contrib.messages 的视图 https://code.djangoproject.com/ticket/17971
         setattr(request, 'session', 'session')
         messages = FallbackStorage(request)
         setattr(request, '_messages', messages)
@@ -137,7 +137,7 @@ class TestCreateAnswerView(BaseQATest):
     def get_post(self):
         request = RequestFactory().post('/fake-url', data={'content': 'content'})
         request.user = self.user
-        # RequestFactory测试含有django.contrib.messages的视图 https://code.djangoproject.com/ticket/17971
+        # RequestFactory 测试含有 django.contrib.messages 的视图 https://code.djangoproject.com/ticket/17971
         setattr(request, 'session', 'session')
         messages = FallbackStorage(request)
         setattr(request, '_messages', messages)
@@ -152,7 +152,7 @@ class TestQAVote(BaseQATest):
     def setUp(self):
         super(TestQAVote, self).setUp()
         self.request = RequestFactory().post('/fake-url', HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-        # QueryDict instance is immutable, request.POST是QueryDict对象，不可变
+        # QueryDict instance is immutable, request.POST 是 QueryDict 对象, 不可变
         self.request.POST = self.request.POST.copy()
 
         self.request.user = self.other_user

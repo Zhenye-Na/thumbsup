@@ -49,6 +49,7 @@ class ArticleCreateView(LoginRequiredMixin, CreateView):
     message = '您的文章已经创建成功!'
 
     def form_valid(self, form):
+        """表单验证"""
         form.instance.user = self.request.user
         return super(ArticleCreateView, self).form_valid(form)
 
@@ -75,12 +76,14 @@ class ArticleEditView(LoginRequiredMixin, AuthorRequiredMixin, UpdateView):  # �
     template_name = 'articles/article_update.html'
 
     def form_valid(self, form):
+        """表单验证"""
         form.instance.user = self.request.user
         return super(ArticleEditView, self).form_valid(form)
 
     def get_success_url(self):
+        """编辑成功后跳转"""
         messages.success(self.request, self.message)
-        return reverse('articles:list')
+        return reverse('articles:article', kwargs={'slug': self.get_object().slug})
 
 
 def notify_comment(**kwargs):

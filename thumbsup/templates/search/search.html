@@ -51,8 +51,11 @@
                     <img class="card-img-top" src="http://placehold.it/1920x1080" alt="没有图片">
                   {% endthumbnail %}
                   <div class="card-body">
-                    <h2 class="card-title"><a href="{% url 'articles:article' result.object.slug %}">
-                      {{ result.object.title|title }}</a></h2>
+                    <h2 class="card-title">
+                      <a href="{% url 'articles:article' result.object.slug %}">
+                        {{ result.object.title|title }}
+                      </a>
+                    </h2>
                     <p class="card-text">{{ result.object.content|truncatechars:100 }}</p>
                   </div>
                 </div>
@@ -85,11 +88,11 @@
                     <a class="email" href="mailto:{{ result.object.email }}">  {{ result.object.get_profile_name }}<br/></a>
                     {% if result.object.job_title %}
                       <i class="fa fa-briefcase" aria-hidden="true"></i>
-                      <i>  {{ result.object.job_title }}<br/></i>
+                      <i>{{ result.object.job_title }}<br/></i>
                     {% endif %}
                     {% if result.object.location %}
                       <i class="fa fa-map-marker" aria-hidden="true"></i>
-                      <i>  {{ result.object.location }}</i>
+                      <i>{{ result.object.location }}</i>
                     {% endif %}
                   </div>
                 </div>

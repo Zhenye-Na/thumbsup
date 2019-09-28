@@ -67,14 +67,17 @@ def notification_handler(actor, recipient, verb, action_object, **kwargs):
     :param recipient:       User Instance 接收者实例, 可以是一个或者多个接收者
     :param verb:            str 通知类别
     :param action_object:   Instance 动作对象的实例
-    :param kwargs:          key, id_value等
+    :param kwargs:          key, id_value 等
     :return:                None
     """
     if actor.username != recipient.username and recipient.username == action_object.user.username:
         # 只通知接收者, 即 recipient == 动作对象的作者
+        # 用户评论点赞自己的文章/动态, 不会收到通知
+
         key = kwargs.get('key', 'notification')
         id_value = kwargs.get('id_value', None)
-        # 记录通知内容
+
+        # 记录通知内容 (保存至数据库)
         Notification.objects.create(
             actor=actor,
             recipient=recipient,
@@ -82,6 +85,7 @@ def notification_handler(actor, recipient, verb, action_object, **kwargs):
             action_object=action_object
         )
 
+        # 获取频道层
         channel_layer = get_channel_layer()
         payload = {
             'type': 'receive',

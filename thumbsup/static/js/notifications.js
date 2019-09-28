@@ -52,7 +52,7 @@ $(function () {
                 },
             });
         }
-        return false;  // 不是 False
+        return false;
     });
 
     // WebSocket连接, 使用 wss(https) 或者 ws(http)

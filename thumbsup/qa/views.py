@@ -128,9 +128,9 @@ def question_vote(request):
             question.votes.update_or_create(user=request.user, defaults={"value": value})
     """
     question_id = request.POST["question"]
-    value = True if request.POST["value"] == 'U' else False  # 'U'表示赞，'D'表示踩
+    value = True if request.POST["value"] == 'U' else False  # 'U'表示赞, 'D'表示踩
     question = Question.objects.get(pk=question_id)
-    users = question.votes.values_list('user', flat=True)  # 当前问题的所有投票用户
+    users = question.votes.values_list('user', flat=True)    # 当前问题的所有投票用户
 
     if request.user.pk in users and (question.votes.get(user=request.user).value == value):
         # 删除之前的记录
@@ -166,11 +166,12 @@ def answer_vote(request):
 def accept_answer(request):
     """
     接受回答, AJAX POST 请求
+
     已经被接受的回答用户不能取消
     """
     answer_id = request.POST["answer"]
     answer = Answer.objects.get(pk=answer_id)
-    # 如果当前登录用户不是提问者，抛出权限拒绝错误
+    # 如果当前登录用户不是提问者, 抛出权限拒绝错误
     if answer.question.user.username != request.user.username:
         raise PermissionDenied
     answer.accept_answer()

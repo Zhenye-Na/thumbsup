@@ -14,10 +14,10 @@
       {% for page_num in paginator.page_range %}
         {% if page_obj.number == page_num %}
           <li class="page-item active">
-                            <span class="page-link">
-                                {{ page_num }}
-                                <span class="sr-only">(当前页)</span>
-                            </span>
+            <span class="page-link">
+              {{ page_num }}
+              <span class="sr-only">(当前页)</span>
+            </span>
           </li>
         {% elif page_num > page_obj.number|add:'-3' and page_num < page_obj.number|add:'3' %}
           <li class="page-item">
