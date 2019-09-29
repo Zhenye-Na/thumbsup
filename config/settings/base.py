@@ -316,7 +316,7 @@ CHANNEL_LAYERS = {
 HAYSTACK_CONNECTIONS = {
     'default': {
         # 使用的 ElasticSearch 搜索引擎
-        'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',
+        'ENGINE': 'haystack.backends.elasticsearch2_backend.Elasticsearch2SearchEngine',
         # ElasticSearch 连接的地址
         'URL': 'http://127.0.0.1:9200/',
         # 默认的索引名
@@ -328,3 +328,7 @@ HAYSTACK_CONNECTIONS = {
 HAYSTACK_SEARCH_RESULTS_PER_PAGE = 20
 # 实时信号量处理器 - 模型类中数据增加, 更新, 删除时自动更新索引
 HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
+
+import django_heroku
+# Activate Django-Heroku.
+django_heroku.settings(locals())

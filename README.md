@@ -339,7 +339,7 @@ python manage.py rebuild_index
 HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
 ```
 
-s
+
 
 ## 4. 网站优化
 

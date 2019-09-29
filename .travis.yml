@@ -1,6 +1,6 @@
 dist: xenial
 services:
-  - postgresql
+  - mysql
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -qq build-essential gettext python-dev zlib1g-dev libpq-dev xvfb
@@ -10,8 +10,8 @@ before_install:
   - sudo apt-get install -qq libsqlite3-dev libxml2 libxml2-dev libssl-dev libbz2-dev wget curl llvm
 language: python
 python:
-  - "3.6"
+  - "3.7"
 install:
   - pip install -r requirements/local.txt
 script:
-  - "pytest"
+  - "python manage.py test"
