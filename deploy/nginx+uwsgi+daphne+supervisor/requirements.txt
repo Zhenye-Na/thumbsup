@@ -21,7 +21,7 @@ argon2-cffi==19.1.0
 pillow==8.1.1
 python3-openid==3.1.0
 requests-oauthlib==1.2.0
-requests==2.21.0
+requests==2.31.0
 django-haystack==2.8.1
 elasticsearch==2.4.1
 uwsgi==2.0.18
